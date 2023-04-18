@@ -8,14 +8,13 @@ process bwamem1 {
     container params.container_bwa_samtools
     cpus 24
     memory '36 GB'
-    tag {"$sampleID"}
     input:
     tuple path(read1), path(read2), file(reference), file(reference_bwt), file(reference_pac), file(reference_sa), file(reference_amb), file(reference_ann)
     script:
     """
     echo bwa-mem1
     bwa mem -t 32 \
-        $reference $read1 $read2 | samtools view -hb | samtools sort -o .sorted.bam
+        $reference $read1 $read2 | samtools view -hb | samtools sort -o test.sorted.bam
     echo ---
     """
 }
@@ -23,14 +22,13 @@ process bwamem2 {
     container params.container_bwa_samtools
     cpus 24
     memory '36 GB'
-    tag {"$sampleID"}
     input:
     tuple path(read1), path(read2), file(reference), file(reference_bwt), file(reference_pac), file(reference_sa), file(reference_amb), file(reference_ann)
     script:
     """
     echo bwa-mem2
     bwa mem -t 32 \
-        $reference $read1 $read2 | samtools view -@ 12 -hb | samtools sort -@ 12 -o ${sampleID}.sorted.bam
+        $reference $read1 $read2 | samtools view -@ 12 -hb | samtools sort -@ 12 -o test.sorted.bam
     echo ---
     """
 }
