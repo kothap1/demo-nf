@@ -10,14 +10,12 @@ process bwamem1 {
     memory '36 GB'
     tag {"$sampleID"}
     input:
-    tuple val(sampleID), file(read1), file(read2), file(reference), file(reference_bwt), file(reference_pac), file(reference_sa), file(reference_amb), file(reference_ann)
-    output:
-    tuple val(sampleID), file("*bam")
+    tuple path(read1), path(read2), file(reference), file(reference_bwt), file(reference_pac), file(reference_sa), file(reference_amb), file(reference_ann)
     script:
     """
-    echo bwa-mem ${sampleID}
+    echo bwa-mem1
     bwa mem -t 32 \
-        $reference $read1 $read2 | samtools view -hb | samtools sort -o ${sampleID}.sorted.bam
+        $reference $read1 $read2 | samtools view -hb | samtools sort -o .sorted.bam
     echo ---
     """
 }
@@ -27,18 +25,23 @@ process bwamem2 {
     memory '36 GB'
     tag {"$sampleID"}
     input:
-    tuple val(sampleID), file(read1), file(read2), file(reference), file(reference_bwt), file(reference_pac), file(reference_sa), file(reference_amb), file(reference_ann)
-    output:
-    tuple val(sampleID), file("*bam")
+    tuple path(read1), path(read2), file(reference), file(reference_bwt), file(reference_pac), file(reference_sa), file(reference_amb), file(reference_ann)
     script:
     """
-    echo bwa-mem ${sampleID}
+    echo bwa-mem2
     bwa mem -t 32 \
         $reference $read1 $read2 | samtools view -@ 12 -hb | samtools sort -@ 12 -o ${sampleID}.sorted.bam
     echo ---
     """
 }
 workflow {
-    bwamem1(fastp.out.trimmed_fqs.map { row -> row +[reference, reference_bwt, reference_pac, reference_sa, reference_amb, reference_ann]})
-    bwamem2(fastp.out.trimmed_fqs.map { row -> row +[reference, reference_bwt, reference_pac, reference_sa, reference_amb, reference_ann]})
+    reference = file(params.reference)
+    reference_bwt = file(params.reference+'.bwt')
+    reference_pac = file(params.reference+'.pac')
+    reference_sa = file(params.reference+'.sa')
+    reference_amb = file(params.reference+'.amb')
+    reference_ann = file(params.reference+'.ann')
+    
+    bwamem1([params.read1, params.read2, reference, reference_bwt, reference_pac, reference_sa, reference_amb, reference_ann])
+    bwamem2([params.read1, params.read2, reference, reference_bwt, reference_pac, reference_sa, reference_amb, reference_ann])
 }
